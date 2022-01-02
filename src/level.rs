@@ -14,6 +14,8 @@ pub struct Level
 	balls: Vec<Ball>,
 	score: i32,
 	ticks: i32,
+	time_until_next_ball: i32,
+	time_between_balls: i32,
 }
 
 impl Level
@@ -26,6 +28,8 @@ impl Level
 			balls: Vec::new(),
 			score: 0,
 			ticks: 0,
+			time_until_next_ball: 0,
+			time_between_balls: 90,
 		}
 	}
 
@@ -53,10 +57,54 @@ impl Level
 			self.ticks += 1;
 			self.score += num_gone as i32;
 
-			let max_balls: usize = 1 + ((self.ticks as usize) / 600);
-			if (self.ticks % 60) == 0 && self.balls.len() < max_balls
+			if self.time_until_next_ball <= 0
 			{
-				self.balls.push(Ball::new(&mut self.rng));
+				let (min_speed, max_speed) = if self.ticks > 120 * 60
+				{
+					(3, 3)
+				}
+				else if self.ticks > 90 * 60
+				{
+					(2, 3)
+				}
+				else if self.ticks > 60 * 60
+				{
+					(2, 2)
+				}
+				else if self.ticks > 10 * 60
+				{
+					(1, 2)
+				}
+				else
+				{
+					(1, 1)
+				};
+				let speed = if self.rng.bool()
+				{
+					self.rng.i32(min_speed..=max_speed)
+				}
+				else
+				{
+					min_speed
+				};
+				let warning_time =
+					std::cmp::max(5, self.time_between_balls * 3 / 4);
+				self.balls.push(Ball::new(
+					min_speed,
+					speed - min_speed,
+					warning_time,
+					&mut self.rng,
+				));
+				self.time_until_next_ball =
+					std::cmp::max(1, self.time_between_balls);
+				if self.time_between_balls > 30 || self.rng.bool()
+				{
+					self.time_between_balls -= 1;
+				}
+			}
+			else if self.time_until_next_ball > 0
+			{
+				self.time_until_next_ball -= 1;
 			}
 		}
 	}
@@ -199,13 +247,25 @@ struct Ball
 	y: i32,
 	hspd: i32,
 	vspd: i32,
+	warning_time: i32,
+	time_between_warning_shots: i32,
 	is_gone: bool,
 }
 
 impl Ball
 {
-	pub fn new(rng: &mut fastrand::Rng) -> Self
+	pub fn new(
+		base_speed: i32,
+		bonus_speed: i32,
+		warning_time: i32,
+		rng: &mut fastrand::Rng,
+	) -> Self
 	{
+		let speed = base_speed + bonus_speed;
+		let num_warning_shots = 2 + 2 * bonus_speed;
+		let time_between_warning_shots =
+			std::cmp::max(1, warning_time / num_warning_shots);
+
 		let minx = 5 + 3;
 		let miny = (PADDING_HEIGHT as i32) + 5 + 3;
 		let maxx = (SCREEN_SIZE as i32) - 5 - 3;
@@ -216,28 +276,36 @@ impl Ball
 				x: rng.i32(minx..=maxx),
 				y: miny - 3,
 				hspd: 0,
-				vspd: 1,
+				vspd: speed,
+				warning_time,
+				time_between_warning_shots,
 				is_gone: false,
 			},
 			1 => Self {
 				x: maxx + 3,
 				y: rng.i32(miny..=maxy),
-				hspd: -1,
+				hspd: -speed,
 				vspd: 0,
+				warning_time,
+				time_between_warning_shots,
 				is_gone: false,
 			},
 			2 => Self {
 				x: rng.i32(minx..=maxx),
 				y: maxy + 3,
 				hspd: 0,
-				vspd: -1,
+				vspd: -speed,
+				warning_time,
+				time_between_warning_shots,
 				is_gone: false,
 			},
 			3 => Self {
 				x: minx - 3,
 				y: rng.i32(miny..=maxy),
-				hspd: 1,
+				hspd: speed,
 				vspd: 0,
+				warning_time,
+				time_between_warning_shots,
 				is_gone: false,
 			},
 			_ => unreachable!(),
@@ -246,6 +314,21 @@ impl Ball
 
 	pub fn update(&mut self)
 	{
+		if self.warning_time > 0
+		{
+			let freq = (700 + self.hspd * 25 + self.vspd * 75) as u32;
+			if (self.warning_time % self.time_between_warning_shots) == 0
+			{
+				tone(freq, 4 | (4 << 8), 30, TONE_TRIANGLE);
+			}
+			self.warning_time -= 1;
+			if self.warning_time == 0
+			{
+				tone(freq, 12 | (4 << 8), 60, TONE_TRIANGLE);
+			}
+			return;
+		}
+
 		self.x += self.hspd;
 		self.y += self.vspd;
 
@@ -260,6 +343,11 @@ impl Ball
 
 	pub fn draw(&self)
 	{
+		if self.warning_time > 0
+		{
+			return;
+		}
+
 		sprites::ball::draw(self.x, self.y);
 	}
 

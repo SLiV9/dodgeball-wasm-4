@@ -2,6 +2,9 @@
 /target
 /Cargo.lock
 
+# build output
+/build
+
 # output files
 *.out
 *.log
