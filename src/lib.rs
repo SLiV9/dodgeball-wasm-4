@@ -32,9 +32,9 @@ fn update()
 	};
 	match outcome
 	{
-		Some(menu::Outcome::Start) =>
+		Some(menu::Outcome::Start { rng_seed }) =>
 		{
-			*game = Game::Level(Level::new());
+			*game = Game::Level(Level::new(rng_seed));
 		}
 		None => (),
 	}
