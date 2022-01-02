@@ -44,16 +44,18 @@ impl Level
 		let num_gone = self.balls.iter().filter(|ball| ball.is_gone).count();
 		self.balls.retain(|ball| !ball.is_gone);
 
-		for ball in &self.balls
-		{
-			if ball.detect_collision(self.little_guy.x, self.little_guy.y)
-			{
-				self.little_guy.kill();
-			}
-		}
-
 		if self.little_guy.is_alive()
 		{
+			for ball in &self.balls
+			{
+				if ball.detect_collision(self.little_guy.x, self.little_guy.y)
+				{
+					self.little_guy.kill();
+					tone(250, 5 | (10 << 8), 100, TONE_NOISE);
+					tone(10, 20 | (80 << 8), 100, TONE_PULSE1);
+				}
+			}
+
 			self.ticks += 1;
 			self.score += num_gone as i32;
 
@@ -266,15 +268,15 @@ impl Ball
 		let time_between_warning_shots =
 			std::cmp::max(1, warning_time / num_warning_shots);
 
-		let minx = 5 + 3;
-		let miny = (PADDING_HEIGHT as i32) + 5 + 3;
-		let maxx = (SCREEN_SIZE as i32) - 5 - 3;
-		let maxy = (SCREEN_SIZE as i32) - 5 - 3;
+		let minx = 5 + 5;
+		let miny = (PADDING_HEIGHT as i32) + 5 + 5;
+		let maxx = (SCREEN_SIZE as i32) - 5 - 5;
+		let maxy = (SCREEN_SIZE as i32) - 5 - 5;
 		match rng.u8(0..4)
 		{
 			0 => Self {
 				x: rng.i32(minx..=maxx),
-				y: miny - 3,
+				y: miny - 5 - 2,
 				hspd: 0,
 				vspd: speed,
 				warning_time,
@@ -282,7 +284,7 @@ impl Ball
 				is_gone: false,
 			},
 			1 => Self {
-				x: maxx + 3,
+				x: maxx + 5 + 2,
 				y: rng.i32(miny..=maxy),
 				hspd: -speed,
 				vspd: 0,
@@ -292,7 +294,7 @@ impl Ball
 			},
 			2 => Self {
 				x: rng.i32(minx..=maxx),
-				y: maxy + 3,
+				y: maxy + 5 + 2,
 				hspd: 0,
 				vspd: -speed,
 				warning_time,
@@ -300,7 +302,7 @@ impl Ball
 				is_gone: false,
 			},
 			3 => Self {
-				x: minx - 3,
+				x: minx - 5 - 2,
 				y: rng.i32(miny..=maxy),
 				hspd: speed,
 				vspd: 0,
@@ -343,12 +345,25 @@ impl Ball
 
 	pub fn draw(&self)
 	{
-		if self.warning_time > 0
+		if self.warning_time == 0
 		{
-			return;
+			sprites::ball::draw(self.x, self.y);
 		}
-
-		sprites::ball::draw(self.x, self.y);
+		else
+		{
+			if (self.warning_time % self.time_between_warning_shots) * 2
+				> self.time_between_warning_shots
+			{
+				if self.hspd == 0
+				{
+					sprites::warning_horizontal::draw(self.x, self.y);
+				}
+				else
+				{
+					sprites::warning_vertical::draw(self.x, self.y);
+				}
+			}
+		}
 	}
 
 	pub fn detect_collision(&self, x: i32, y: i32) -> bool
