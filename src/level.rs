@@ -5,7 +5,8 @@ use crate::sprites;
 use crate::wasm4::*;
 use fastrand;
 
-const PADDING_HEIGHT: u32 = 20;
+const BANNER_HEIGHT: u32 = 20;
+const PADDING_SIZE: u32 = 10;
 
 pub struct Level
 {
@@ -163,10 +164,10 @@ impl Level
 
 		unsafe { *DRAW_COLORS = 0x40 }
 		rect(
-			5,
-			(PADDING_HEIGHT as i32) + 5,
-			SCREEN_SIZE - 10,
-			SCREEN_SIZE - PADDING_HEIGHT - 10,
+			PADDING_SIZE as i32,
+			(BANNER_HEIGHT + PADDING_SIZE) as i32,
+			SCREEN_SIZE - 2 * PADDING_SIZE,
+			SCREEN_SIZE - BANNER_HEIGHT - 2 * PADDING_SIZE,
 		);
 
 		for ball in &self.balls
@@ -250,10 +251,10 @@ impl LittleGuy
 		let is_cheating = (gamepad & BUTTON_2) != 0;
 		if !self.is_dead && !is_cheating
 		{
-			if self.x < 5 + 5
-				|| self.x > (SCREEN_SIZE as i32) - 5 - 5
-				|| self.y < (PADDING_HEIGHT as i32) + 5 + 3
-				|| self.y > (SCREEN_SIZE as i32) - 5 - 3
+			if self.x < (PADDING_SIZE as i32) + 5
+				|| self.x > (SCREEN_SIZE as i32) - (PADDING_SIZE as i32) - 5
+				|| self.y < (BANNER_HEIGHT as i32) + (PADDING_SIZE as i32) + 3
+				|| self.y > (SCREEN_SIZE as i32) - (PADDING_SIZE as i32) - 3
 			{
 				self.is_dead = true;
 				self.sprite.die();
@@ -303,10 +304,10 @@ impl Ball
 		let time_between_warning_shots =
 			std::cmp::max(1, warning_time / num_warning_shots);
 
-		let minx = 5 + 5;
-		let miny = (PADDING_HEIGHT as i32) + 5 + 5;
-		let maxx = (SCREEN_SIZE as i32) - 5 - 5;
-		let maxy = (SCREEN_SIZE as i32) - 5 - 5;
+		let minx = (PADDING_SIZE as i32) + 5;
+		let miny = (BANNER_HEIGHT as i32) + (PADDING_SIZE as i32) + 5;
+		let maxx = (SCREEN_SIZE as i32) - (PADDING_SIZE as i32) - 5;
+		let maxy = (SCREEN_SIZE as i32) - (PADDING_SIZE as i32) - 5;
 		match rng.u8(0..4)
 		{
 			0 => Self {
@@ -369,10 +370,13 @@ impl Ball
 		self.x += self.hspd;
 		self.y += self.vspd;
 
-		if (self.hspd < 0 && self.x < 5)
-			|| (self.hspd > 0 && self.x > (SCREEN_SIZE as i32) - 5)
-			|| (self.vspd < 0 && self.y < (PADDING_HEIGHT as i32) + 5)
-			|| (self.vspd > 0 && self.y > (SCREEN_SIZE as i32) - 5)
+		if (self.hspd < 0 && self.x < (PADDING_SIZE as i32))
+			|| (self.hspd > 0
+				&& self.x > (SCREEN_SIZE as i32) - (PADDING_SIZE as i32))
+			|| (self.vspd < 0
+				&& self.y < (BANNER_HEIGHT as i32) + (PADDING_SIZE as i32))
+			|| (self.vspd > 0
+				&& self.y > (SCREEN_SIZE as i32) - (PADDING_SIZE as i32))
 		{
 			self.is_gone = true;
 		}
