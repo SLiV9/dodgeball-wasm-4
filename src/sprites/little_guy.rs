@@ -201,7 +201,14 @@ impl Animation
 		unsafe {
 			*DRAW_COLORS = 0x4320;
 		}
-		blit(frame, x, y, LITTLE_GUY_WIDTH, LITTLE_GUY_HEIGHT, BLIT_2BPP);
+		blit(
+			frame,
+			x - (LITTLE_GUY_WIDTH as i32) / 2,
+			y - (LITTLE_GUY_HEIGHT as i32) + 2,
+			LITTLE_GUY_WIDTH,
+			LITTLE_GUY_HEIGHT,
+			BLIT_2BPP,
+		);
 	}
 }
 
