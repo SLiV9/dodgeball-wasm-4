@@ -36,14 +36,28 @@ impl Level
 		{
 			ball.update();
 		}
+
+		let num_gone = self.balls.iter().filter(|ball| ball.is_gone).count();
 		self.balls.retain(|ball| !ball.is_gone);
 
-		self.ticks += 1;
-
-		let max_balls: usize = 1 + ((self.ticks as usize) / 600);
-		if (self.ticks % 60) == 0 && self.balls.len() < max_balls
+		for ball in &self.balls
 		{
-			self.balls.push(Ball::new(&mut self.rng));
+			if ball.detect_collision(self.little_guy.x, self.little_guy.y)
+			{
+				self.little_guy.kill();
+			}
+		}
+
+		if self.little_guy.is_alive()
+		{
+			self.ticks += 1;
+			self.score += num_gone as i32;
+
+			let max_balls: usize = 1 + ((self.ticks as usize) / 600);
+			if (self.ticks % 60) == 0 && self.balls.len() < max_balls
+			{
+				self.balls.push(Ball::new(&mut self.rng));
+			}
 		}
 	}
 
@@ -162,6 +176,17 @@ impl LittleGuy
 		}
 	}
 
+	pub fn kill(&mut self)
+	{
+		self.is_dead = true;
+		self.sprite.die();
+	}
+
+	pub fn is_alive(&self) -> bool
+	{
+		!self.is_dead
+	}
+
 	pub fn draw(&self)
 	{
 		self.sprite.draw(self.x, self.y);
@@ -236,5 +261,10 @@ impl Ball
 	pub fn draw(&self)
 	{
 		sprites::ball::draw(self.x, self.y);
+	}
+
+	pub fn detect_collision(&self, x: i32, y: i32) -> bool
+	{
+		(self.x - x).abs() < 8 && (self.y - y).abs() < 3
 	}
 }
