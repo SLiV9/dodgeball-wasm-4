@@ -61,45 +61,79 @@ impl Level
 
 			if self.time_until_next_ball <= 0
 			{
-				let (min_speed, max_speed) = if self.ticks > 120 * 60
+				let (min_speed, min_bonus, max_bonus) = if self.ticks > 150 * 60
 				{
-					(3, 3)
+					(5, 0, 0)
+				}
+				else if self.ticks > 120 * 60
+				{
+					(3, 0, 0)
 				}
 				else if self.ticks > 90 * 60
 				{
-					(2, 3)
+					(2, 1, 1)
+				}
+				else if self.ticks > 75 * 60
+				{
+					(2, 0, 1)
 				}
 				else if self.ticks > 60 * 60
 				{
-					(2, 2)
+					(2, 0, 0)
+				}
+				else if self.ticks > 30 * 60
+				{
+					(1, 1, 1)
 				}
 				else if self.ticks > 10 * 60
 				{
-					(1, 2)
+					(1, 0, 1)
 				}
 				else
 				{
-					(1, 1)
+					(1, 0, 0)
 				};
-				let speed = if self.rng.bool()
+				let bonus_speed = if self.rng.bool()
 				{
-					self.rng.i32(min_speed..=max_speed)
+					self.rng.i32(min_bonus..=max_bonus)
 				}
 				else
 				{
-					min_speed
+					0
 				};
 				let warning_time =
 					std::cmp::max(5, self.time_between_balls * 3 / 4);
 				self.balls.push(Ball::new(
 					min_speed,
-					speed - min_speed,
+					bonus_speed,
 					warning_time,
 					&mut self.rng,
 				));
 				self.time_until_next_ball =
 					std::cmp::max(1, self.time_between_balls);
-				if self.time_between_balls > 30 || self.rng.bool()
+				if self.time_between_balls > 70
+				{
+					self.time_between_balls -= 2;
+				}
+				else if self.time_between_balls > 45
+				{
+					self.time_between_balls -= 1;
+				}
+				else if self.time_between_balls > 30 && self.rng.bool()
+				{
+					self.time_between_balls -= 1;
+				}
+				else if self.time_between_balls > 20
+					&& self.rng.i32(0..4) == 0
+				{
+					self.time_between_balls -= 1;
+				}
+				else if self.time_between_balls > 10
+					&& self.rng.i32(0..10) == 0
+				{
+					self.time_between_balls -= 1;
+				}
+				else if self.rng.i32(0..100) == 0
 				{
 					self.time_between_balls -= 1;
 				}
@@ -213,7 +247,8 @@ impl LittleGuy
 			self.sprite.idle();
 		}
 
-		if !self.is_dead
+		let is_cheating = (gamepad & BUTTON_2) != 0;
+		if !self.is_dead && !is_cheating
 		{
 			if self.x < 5 + 5
 				|| self.x > (SCREEN_SIZE as i32) - 5 - 5
@@ -352,7 +387,7 @@ impl Ball
 		else
 		{
 			if (self.warning_time % self.time_between_warning_shots) * 2
-				> self.time_between_warning_shots
+				>= self.time_between_warning_shots - 2
 			{
 				if self.hspd == 0
 				{
