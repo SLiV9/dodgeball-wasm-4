@@ -1,3 +1,5 @@
+/**/
+
 use buddy_alloc::{BuddyAllocParam, FastAllocParam, NonThreadsafeAlloc};
 
 // These values can be tuned
