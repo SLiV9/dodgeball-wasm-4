@@ -98,7 +98,8 @@ impl Level
 				{
 					(1, 0, 0)
 				};
-				let bonus_speed = if self.rng.bool()
+				let is_horizontal = self.rng.bool();
+				let bonus_speed = if is_horizontal
 				{
 					self.rng.i32(min_bonus..=max_bonus)
 				}
@@ -109,6 +110,7 @@ impl Level
 				let warning_time =
 					std::cmp::max(5, self.time_between_balls * 3 / 4);
 				self.balls.push(Ball::new(
+					is_horizontal,
 					min_speed,
 					bonus_speed,
 					warning_time,
@@ -320,6 +322,7 @@ struct Ball
 impl Ball
 {
 	pub fn new(
+		is_horizontal: bool,
 		base_speed: i32,
 		bonus_speed: i32,
 		warning_time: i32,
@@ -335,9 +338,9 @@ impl Ball
 		let miny = (BANNER_HEIGHT as i32) + (PADDING_SIZE as i32) + 5;
 		let maxx = (SCREEN_SIZE as i32) - (PADDING_SIZE as i32) - 5;
 		let maxy = (SCREEN_SIZE as i32) - (PADDING_SIZE as i32) - 5;
-		match rng.u8(0..4)
+		match rng.bool()
 		{
-			0 => Self {
+			true if !is_horizontal => Self {
 				x: rng.i32(minx..=maxx),
 				y: miny - 5 - 2,
 				hspd: 0,
@@ -346,7 +349,7 @@ impl Ball
 				time_between_warning_shots,
 				is_gone: false,
 			},
-			1 => Self {
+			true if is_horizontal => Self {
 				x: maxx + 5 + 2,
 				y: rng.i32(miny..=maxy),
 				hspd: -speed,
@@ -355,7 +358,7 @@ impl Ball
 				time_between_warning_shots,
 				is_gone: false,
 			},
-			2 => Self {
+			false if !is_horizontal => Self {
 				x: rng.i32(minx..=maxx),
 				y: maxy + 5 + 2,
 				hspd: 0,
@@ -364,7 +367,7 @@ impl Ball
 				time_between_warning_shots,
 				is_gone: false,
 			},
-			3 => Self {
+			false if is_horizontal => Self {
 				x: minx - 5 - 2,
 				y: rng.i32(miny..=maxy),
 				hspd: speed,
