@@ -1,6 +1,6 @@
-/*
- * Inspired by code shared by FreeFull in Discord.
- */
+//
+// Inspired by code shared by FreeFull in Discord.
+//
 
 pub struct Wrapper<T>
 {
