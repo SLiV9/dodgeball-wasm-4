@@ -1,4 +1,8 @@
-/**/
+//
+// Part of dodgeball-wasm-4
+// Copyright (c) 2022 Sander in 't Veld
+// License: MIT
+//
 
 use crate::palette;
 use crate::sprites;

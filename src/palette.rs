@@ -1,4 +1,8 @@
-/**/
+//
+// Part of dodgeball-wasm-4
+// Copyright (c) 2022 Sander in 't Veld
+// License: MIT
+//
 
 // Palette: "SODA-CAP" by Cappuchi
 // https://lospec.com/palette-list/soda-cap

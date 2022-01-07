@@ -1,4 +1,5 @@
-/**/
+//
+// WASM-4: https://wasm4.org/docs
 
 use buddy_alloc::{BuddyAllocParam, FastAllocParam, NonThreadsafeAlloc};
 
