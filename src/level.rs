@@ -148,6 +148,14 @@ impl Level
 				self.time_until_next_ball -= 1;
 			}
 		}
+		else if self.balls.is_empty()
+		{
+			let gamepad = unsafe { *GAMEPAD1 };
+			if gamepad & BUTTON_1 != 0
+			{
+				self.restart();
+			}
+		}
 	}
 
 	pub fn draw(&mut self)
@@ -165,6 +173,12 @@ impl Level
 		let score = self.score;
 		text(format!("TM: {:>3}.{}", seconds, frac), 5, 5);
 		text(format!("PTS: {:>3}", score), 90, 5);
+
+		if !self.little_guy.is_alive() && self.balls.is_empty()
+		{
+			text("PRESS X TO RESTART", 10, 140);
+			return;
+		}
 
 		unsafe { *DRAW_COLORS = 0x40 }
 		rect(
@@ -189,6 +203,15 @@ impl Level
 				ball.draw();
 			}
 		}
+	}
+
+	fn restart(&mut self)
+	{
+		self.little_guy = LittleGuy::new();
+		self.score = 0;
+		self.ticks = 0;
+		self.time_until_next_ball = 0;
+		self.time_between_balls = 90;
 	}
 }
 
